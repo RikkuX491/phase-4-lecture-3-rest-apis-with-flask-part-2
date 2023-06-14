@@ -30,20 +30,22 @@ class Hotels(Resource):
         for hotel in hotels:
             hotel_dictionary = {
                 "id": hotel.id,
-                "name": hotel.name
+                "name": hotel.name,
+                "year_built": hotel.year_built
             }
             response_body.append(hotel_dictionary)
 
         return make_response(jsonify(response_body), 200)
 
     def post(self):
-        new_hotel = Hotel(name=request.get_json().get('name'))
+        new_hotel = Hotel(name=request.get_json().get('name'), year_built=request.get_json().get('year_built'))
         db.session.add(new_hotel)
         db.session.commit()
 
         response_body = {
             "id": new_hotel.id,
-            "name": new_hotel.name
+            "name": new_hotel.name,
+            "year_built": new_hotel.year_built
         }
         
         return make_response(jsonify(response_body), 201)
@@ -64,9 +66,51 @@ class HotelById(Resource):
         else:
             response_body = {
                 "id": hotel.id,
-                "name": hotel.name
+                "name": hotel.name,
+                "year_built": hotel.year_built
             }
             status = 200
+
+        return make_response(jsonify(response_body), status)
+    
+    def patch(self, id):
+        hotel = Hotel.query.filter(Hotel.id == id).first()
+
+        if not hotel:
+            response_body = {
+                "error": "Hotel not found"
+            }
+            status = 404
+
+        else:
+            for key in request.get_json():
+                setattr(hotel, key, request.get_json().get(key))
+
+            db.session.commit()
+
+            response_body = {
+                "id": hotel.id,
+                "name": hotel.name,
+                "year_built": hotel.year_built
+            }
+            status = 200
+
+        return make_response(jsonify(response_body), status)
+    
+    def delete(self, id):
+        hotel = Hotel.query.filter(Hotel.id == id).first()
+
+        if not hotel:
+            response_body = {
+                "error": "Hotel not found"
+            }
+            status = 404
+
+        else:
+            db.session.delete(hotel)
+            db.session.commit()
+            response_body = {}
+            status = 204
 
         return make_response(jsonify(response_body), status)
 
